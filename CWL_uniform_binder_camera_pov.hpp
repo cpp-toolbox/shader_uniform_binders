@@ -27,9 +27,9 @@
  * \param shader_program_id
  * \param screen_width
  * \param screen_height
- * \param character_position
+ * \param character_position the position of the local character, to be drawn from their pov
  */
-void bind_CWL_matrix_uniforms_camera_pov(GLuint shader_program_id, int screen_width, int screen_height,
+void bind_CWL_matrix_uniforms_camera_pov(ShaderCache &shader_cache, int screen_width, int screen_height,
                                          glm::vec3 character_position, glm::mat4 local_to_world, Camera camera,
                                          float fov, float render_distance);
 

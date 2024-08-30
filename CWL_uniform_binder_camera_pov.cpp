@@ -24,29 +24,35 @@
  * \param screen_height
  * \param character_position
  */
-void bind_CWL_matrix_uniforms_camera_pov(GLuint shader_program_id, int screen_width, int screen_height,
+void bind_CWL_matrix_uniforms_camera_pov(ShaderCache &shader_cache, int screen_width, int screen_height,
                                          glm::vec3 character_position, glm::mat4 local_to_world, Camera camera,
                                          float fov, float render_distance) {
 
-    // don't forget to enable shader before setting uniforms
-    glUseProgram(shader_program_id);
-
-    // view/projection transformations
-    glm::mat4 camera_to_clip =
-        glm::perspective(glm::radians(fov), (float)screen_width / (float)screen_height, 0.1f, render_distance);
-
-    // TODO: swap order of these so that it mirrors the transformation application order
-
-    GLint camera_to_clip_uniform_location = glGetUniformLocation(shader_program_id, "camera_to_clip");
-    glUniformMatrix4fv(camera_to_clip_uniform_location, 1, GL_FALSE, glm::value_ptr(camera_to_clip));
+    shader_cache.use_shader_program(ShaderType::CWL_V_TRANSFORMATION_WITH_TEXTURES);
 
     glm::mat4 world_to_camera =
         glm::lookAt(character_position, character_position + camera.look_direction, camera.up_direction);
-    GLint world_to_camera_uniform_location = glGetUniformLocation(shader_program_id, "world_to_camera");
-    glUniformMatrix4fv(world_to_camera_uniform_location, 1, GL_FALSE, glm::value_ptr(world_to_camera));
+    glm::mat4 camera_to_clip =
+        glm::perspective(glm::radians(fov), (float)screen_width / (float)screen_height, 0.1f, render_distance);
 
-    GLint local_to_world_uniform_location = glGetUniformLocation(shader_program_id, "local_to_world");
-    glUniformMatrix4fv(local_to_world_uniform_location, 1, GL_FALSE, glm::value_ptr(local_to_world));
+    shader_cache.set_uniform(ShaderType::CWL_V_TRANSFORMATION_WITH_TEXTURES, ShaderUniformVariable::LOCAL_TO_WORLD,
+                             local_to_world);
+    shader_cache.set_uniform(ShaderType::CWL_V_TRANSFORMATION_WITH_TEXTURES, ShaderUniformVariable::WORLD_TO_CAMERA,
+                             world_to_camera);
+    shader_cache.set_uniform(ShaderType::CWL_V_TRANSFORMATION_WITH_TEXTURES, ShaderUniformVariable::CAMERA_TO_CLIP,
+                             camera_to_clip);
 
-    glUseProgram(0);
+    bool temp = true;
+    if (temp) {
+        glm::vec3 origin(0.0f);
+        glm::mat4 world_to_camera_no_translation =
+            glm::lookAt(origin, origin + camera.look_direction, camera.up_direction);
+        shader_cache.use_shader_program(ShaderType::SKYBOX);
+        // wrong name
+        shader_cache.set_uniform(ShaderType::SKYBOX, ShaderUniformVariable::WORLD_TO_CAMERA,
+                                 world_to_camera_no_translation);
+        shader_cache.set_uniform(ShaderType::SKYBOX, ShaderUniformVariable::CAMERA_TO_CLIP, camera_to_clip);
+    }
+
+    shader_cache.stop_using_shader_program();
 }
